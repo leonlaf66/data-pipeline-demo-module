@@ -1,5 +1,5 @@
-resource "aws_kms_key" "msk" {
-  description             = "KMS key for ${var.app_name} MSK cluster encryption (${var.env})"
+resource "aws_kms_key" "database" {
+  description             = "KMS key for ${var.app_name} RDS database encryption (${var.env})"
   deletion_window_in_days = 7
   enable_key_rotation     = true
   
@@ -16,21 +16,20 @@ resource "aws_kms_key" "msk" {
         Resource = "*"
       },
       {
-        Sid    = "Allow MSK to use the key"
+        Sid    = "Allow RDS to use the key"
         Effect = "Allow"
         Principal = {
-          Service = "kafka.amazonaws.com"
+          Service = "rds.amazonaws.com"
         }
         Action = [
           "kms:Decrypt",
-          "kms:GenerateDataKey",
-          "kms:CreateGrant",
-          "kms:DescribeKey"
+          "kms:DescribeKey",
+          "kms:CreateGrant"
         ]
         Resource = "*"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "kafka.${var.region}.amazonaws.com"
+            "kms:ViaService" = "rds.${var.region}.amazonaws.com"
           }
         }
       },
@@ -69,7 +68,7 @@ resource "aws_kms_key" "msk" {
         Resource = "*"
         Condition = {
           ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/msk/*"
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/rds/*"
           }
         }
       }
@@ -79,13 +78,13 @@ resource "aws_kms_key" "msk" {
   tags = merge(
     var.common_tags,
     {
-      Name    = "${var.app_name}-msk-kms-key"
-      Purpose = "MSK Cluster Encryption"
+      Name    = "${var.app_name}-database-kms-key"
+      Purpose = "RDS Database Encryption"
     }
   )
 }
 
-resource "aws_kms_alias" "msk" {
-  name          = "alias/${var.app_name}-msk-${var.env}"
-  target_key_id = aws_kms_key.msk.key_id
+resource "aws_kms_alias" "database" {
+  name          = "alias/${var.app_name}-database-${var.env}"
+  target_key_id = aws_kms_key.database.key_id
 }

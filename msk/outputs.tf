@@ -25,6 +25,16 @@ output "cluster_arn" {
   value = aws_msk_cluster.this.arn
 }
 
-output "scram_secret_arns" {
-  value = { for k, v in aws_secretsmanager_secret.scram_secret : k => v.arn }
+output "scram_secret_names" {
+  description = "Map of SCRAM user names to their Secrets Manager secret names"
+  value = {
+    for user in var.scram_users : user => "AmazonMSK_${user}"
+  }
+  # 输出:
+  # {
+  #   "admin"          = "AmazonMSK_admin"
+  #   "debezium"       = "AmazonMSK_debezium"
+  #   "s3_sink_mnpi"   = "AmazonMSK_s3_sink_mnpi"
+  #   "s3_sink_public" = "AmazonMSK_s3_sink_public"
+  # }
 }

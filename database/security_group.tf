@@ -1,19 +1,24 @@
 resource "aws_security_group" "rds" {
   name        = "${var.app_name}-rds-sg-${var.env}"
-  description = "Security group for RDS Source DB"
+  description = "Security group for RDS Source DB (CDC enabled)"
   vpc_id      = var.vpc_id
 
-  tags = var.common_tags
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.app_name}-rds-sg-${var.env}"
+    }
+  )
 }
 
-resource "aws_vpc_security_group_ingress_rule" "rds_ingress" {
-  for_each = toset(var.allowed_ingress_cidrs)
-
+resource "aws_vpc_security_group_egress_rule" "rds_egress" {
   security_group_id = aws_security_group.rds.id
-  description       = "Allow Postgres access from specific CIDR"
+  description       = "Allow all outbound traffic"
   
-  from_port   = 5432
-  to_port     = 5432
-  ip_protocol = "tcp"
-  cidr_ipv4   = each.value
+  ip_protocol = "-1"
+  cidr_ipv4   = "0.0.0.0/0"
+
+  tags = {
+    Name = "allow-all-outbound"
+  }
 }

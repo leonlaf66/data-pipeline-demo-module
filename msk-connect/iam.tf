@@ -21,79 +21,150 @@ resource "aws_iam_role_policy" "msk_connect" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "MSKClusterAccess"
-        Effect = "Allow"
-        Action = [
-          "kafka-cluster:Connect",
-          "kafka-cluster:DescribeCluster",
-          "kafka-cluster:DescribeTopic",
-          "kafka-cluster:CreateTopic",
-          "kafka-cluster:WriteData",
-          "kafka-cluster:ReadData"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "S3Access"
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:AbortMultipartUpload"
-        ]
-        Resource = concat(
-          [var.custom_plugin_bucket_arn, "${var.custom_plugin_bucket_arn}/*"],
-          
-          var.s3_sink_bucket_arn != null ? [var.s3_sink_bucket_arn, "${var.s3_sink_bucket_arn}/*"] : []
-        )
-      },
-      {
-        Sid    = "KMSAccess"
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt",
-          "kms:GenerateDataKey"
-        ]
-        Resource = concat(
-          var.msk_kms_key_arn != null ? [var.msk_kms_key_arn] : [],
-          var.s3_kms_key_arn != null ? [var.s3_kms_key_arn] : []
-        )
-      },
-      {
-        Sid    = "VPCAccess"
-        Effect = "Allow"
-        Action = [
-          "ec2:CreateNetworkInterface",
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeVpcs",
-          "ec2:DeleteNetworkInterface",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "LoggingAccess"
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:CreateLogGroup",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "SecretsAccess"
-        Effect = "Allow"
-        Action = "secretsmanager:GetSecretValue"
-        Resource = [
-          "arn:aws:secretsmanager:*:*:secret:AmazonMSK_*",
-          "arn:aws:secretsmanager:*:*:secret:${var.connector_name}*"
-        ]
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Sid    = "MSKClusterConnect"
+          Effect = "Allow"
+          Action = [
+            "kafka-cluster:Connect",
+            "kafka-cluster:DescribeCluster"
+          ]
+          Resource = var.msk_cluster_arn
+        }
+      ],
+      
+      var.connector_type == "source" && length(var.kafka_topics_write) > 0 ? [
+        {
+          Sid    = "MSKWriteTopics"
+          Effect = "Allow"
+          Action = [
+            "kafka-cluster:CreateTopic",
+            "kafka-cluster:DescribeTopic",
+            "kafka-cluster:WriteData"
+          ]
+          Resource = [
+            for topic in var.kafka_topics_write :
+            "arn:aws:kafka:${var.region}:${var.account_id}:topic/${split("/", var.msk_cluster_arn)[1]}/*/${topic}"
+          ]
+        }
+      ] : [],
+      
+      var.connector_type == "sink" && length(var.kafka_topics_read) > 0 ? [
+        {
+          Sid    = "MSKReadTopics"
+          Effect = "Allow"
+          Action = [
+            "kafka-cluster:DescribeTopic",
+            "kafka-cluster:ReadData"
+          ]
+          Resource = [
+            for topic in var.kafka_topics_read :
+            "arn:aws:kafka:${var.region}:${var.account_id}:topic/${split("/", var.msk_cluster_arn)[1]}/*/${topic}"
+          ]
+        },
+        {
+          Sid    = "MSKConsumerGroup"
+          Effect = "Allow"
+          Action = [
+            "kafka-cluster:AlterGroup",
+            "kafka-cluster:DescribeGroup"
+          ]
+          Resource = "arn:aws:kafka:${var.region}:${var.account_id}:group/${split("/", var.msk_cluster_arn)[1]}/*/${var.connector_name}-*"
+        }
+      ] : [],
+
+      [
+        {
+          Sid    = "S3PluginAccess"
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:ListBucket"
+          ]
+          Resource = [
+            var.custom_plugin_bucket_arn,
+            "${var.custom_plugin_bucket_arn}/*"
+          ]
+        }
+      ],
+      
+      var.connector_type == "sink" && var.s3_sink_bucket_arn != null ? [
+        {
+          Sid    = "S3SinkWrite"
+          Effect = "Allow"
+          Action = [
+            "s3:PutObject",
+            "s3:AbortMultipartUpload"
+          ]
+          Resource = "${var.s3_sink_bucket_arn}/*"
+        },
+        {
+          Sid    = "S3SinkList"
+          Effect = "Allow"
+          Action = "s3:ListBucket"
+          Resource = var.s3_sink_bucket_arn
+        }
+      ] : [],
+
+      length(compact([var.msk_kms_key_arn, var.s3_kms_key_arn, var.secrets_kms_key_arn])) > 0 ? [
+        {
+          Sid    = "KMSAccess"
+          Effect = "Allow"
+          Action = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+          ]
+          Resource = compact([
+            var.msk_kms_key_arn,
+            var.s3_kms_key_arn,
+            var.secrets_kms_key_arn
+          ])
+        }
+      ] : [],
+
+      [
+        {
+          Sid    = "VPCNetworkInterface"
+          Effect = "Allow"
+          Action = [
+            "ec2:CreateNetworkInterface",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribeVpcs",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeSecurityGroups"
+          ]
+          Resource = "*"
+        }
+      ],
+
+      [
+        {
+          Sid    = "CloudWatchLogs"
+          Effect = "Allow"
+          Action = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Resource = "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/msk-connect/${var.connector_name}:*"
+        },
+        {
+          Sid    = "CloudWatchLogsCreateGroup"
+          Effect = "Allow"
+          Action = "logs:CreateLogGroup"
+          Resource = "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/msk-connect/${var.connector_name}"
+        }
+      ],
+
+      var.connector_type == "source" && var.rds_secret_arn != null ? [
+        {
+          Sid    = "SecretsManagerRDS"
+          Effect = "Allow"
+          Action = "secretsmanager:GetSecretValue"
+          Resource = var.rds_secret_arn
+        }
+      ] : []
+    )
   })
 }
