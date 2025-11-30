@@ -1,7 +1,7 @@
 resource "aws_iam_role" "msk_connect" {
-  name               = "${var.connector_name}-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-
+  name                 = "${var.connector_name}-role"
+  assume_role_policy   = data.aws_iam_policy_document.assume_role.json
+  permissions_boundary = var.iam_permissions_boundary_arn
   tags = var.common_tags
 }
 

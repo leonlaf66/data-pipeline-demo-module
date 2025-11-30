@@ -71,7 +71,7 @@ variable "msk_bootstrap_servers" {
 
 variable "msk_authentication_type" {
   type        = string
-  default     = "IAM"
+  default     = "NONE"
   description = "MSK authentication type: IAM or NONE"
   validation {
     condition     = contains(["IAM", "NONE"], var.msk_authentication_type)
@@ -202,4 +202,11 @@ variable "common_tags" {
   type        = map(string)
   default     = {}
   description = "Common tags for all resources"
+}
+
+# IAM
+variable "iam_permissions_boundary_arn" {
+  description = "ARN of the IAM permissions boundary to attach to roles"
+  type        = string
+  default     = null
 }

@@ -1,8 +1,9 @@
 resource "aws_iam_role" "this" {
   for_each = var.user_groups
 
-  name        = "${var.app_name}-${replace(each.key, "_", "-")}-${var.env}"
-  description = each.value.description
+  name                 = "${var.app_name}-${replace(each.key, "_", "-")}-${var.env}"
+  description          = each.value.description
+  permissions_boundary = var.iam_permissions_boundary_arn
 
   assume_role_policy = data.aws_iam_policy_document.assume_role[each.key].json
 

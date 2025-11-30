@@ -109,3 +109,10 @@ variable "query_result_retention_days" {
   default     = 30
   description = "Days to retain Athena query results"
 }
+
+# IAM
+variable "iam_permissions_boundary_arn" {
+  description = "ARN of the IAM permissions boundary to attach to roles"
+  type        = string
+  default     = null
+}
