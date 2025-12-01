@@ -16,7 +16,7 @@ Amazon MSK cluster with SCRAM authentication, NLB endpoint, and Route53 DNS.
 
 ```hcl
 module "msk" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//msk?ref=main"
+  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//msk?ref=v1.0.0"
 
   app_name   = "kraken-demo"
   env        = "dev"

@@ -14,7 +14,7 @@ S3-based Data Lake with MNPI/Public isolation, KMS encryption, Glue Catalog, and
 
 ```hcl
 module "storage" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//storage?ref=main"
+  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//storage?ref=v1.0.0"
 
   app_name   = "kraken-demo"
   env        = "dev"

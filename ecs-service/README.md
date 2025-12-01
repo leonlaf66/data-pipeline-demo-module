@@ -17,7 +17,7 @@ ECS Fargate cluster with multiple services, ALB, EFS, and Route53.
 
 ```hcl
 module "streaming_services" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//ecs-service?ref=main"
+  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//ecs-service?ref=v1.0.0"
 
   app_name       = "kraken-demo"
   environment    = "dev"

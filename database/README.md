@@ -15,7 +15,7 @@ PostgreSQL RDS instance with CDC-enabled parameters for Debezium integration.
 
 ```hcl
 module "database" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//database?ref=main"
+  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//database?ref=v1.0.0"
 
   app_name   = "kraken-demo"
   env        = "dev"

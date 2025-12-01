@@ -20,7 +20,7 @@ Athena query layer with role-based access control for MNPI/Public data separatio
 
 ```hcl
 module "athena" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//athena?ref=main"
+  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//athena?ref=v1.0.0"
 
   app_name   = "kraken-demo"
   env        = "dev"
