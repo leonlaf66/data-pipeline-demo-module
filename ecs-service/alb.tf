@@ -1,7 +1,4 @@
-################################################################################
-# Application Load Balancers (one per service that needs ALB)
-################################################################################
-
+# Application Load Balancers
 resource "aws_lb" "this" {
   for_each = local.services_with_alb
 
@@ -23,16 +20,13 @@ resource "aws_lb" "this" {
   )
 }
 
-################################################################################
 # Target Groups
-################################################################################
-
 resource "aws_lb_target_group" "this" {
   for_each = local.services_with_alb
 
   name        = substr("${var.app_name}-${var.environment}-${each.key}-tg", 0, 32)
   port        = each.value.container_port
-  protocol    = "HTTP"  # Always HTTP to container
+  protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
 
@@ -63,10 +57,7 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
-################################################################################
-# ALB Listeners - HTTPS (when certificate provided)
-################################################################################
-
+# ALB Listeners
 resource "aws_lb_listener" "https" {
   for_each = local.use_https ? local.services_with_alb : {}
 
@@ -90,10 +81,7 @@ resource "aws_lb_listener" "https" {
   )
 }
 
-################################################################################
-# ALB Listeners - HTTP (when no certificate, or as redirect)
-################################################################################
-
+# ALB Listeners
 resource "aws_lb_listener" "http" {
   for_each = local.use_https ? {} : local.services_with_alb
 

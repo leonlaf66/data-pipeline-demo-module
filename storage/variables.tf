@@ -1,7 +1,4 @@
-# =============================================================================
 # Core Variables
-# =============================================================================
-
 variable "app_name" {
   type        = string
   description = "Application name"
@@ -33,14 +30,11 @@ variable "common_tags" {
   default     = {}
 }
 
-# =============================================================================
 # MNPI Security Configuration
-# =============================================================================
-
 variable "enable_mnpi_object_lock" {
   type        = bool
   description = "Enable S3 Object Lock for MNPI buckets (WORM compliance)"
-  default     = false
+  default     = true
 }
 
 variable "mnpi_object_lock_retention_days" {
@@ -49,10 +43,7 @@ variable "mnpi_object_lock_retention_days" {
   default     = 365
 }
 
-# =============================================================================
 # Logging & Audit Configuration
-# =============================================================================
-
 variable "enable_access_logging" {
   type        = bool
   description = "Enable S3 access logging for all data lake buckets"
@@ -68,7 +59,7 @@ variable "access_log_retention_days" {
 variable "cloudtrail_retention_days" {
   type        = number
   description = "Days to retain CloudTrail logs before expiration"
-  default     = 2555  # 7 years for compliance
+  default     = 2555
 }
 
 
