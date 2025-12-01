@@ -17,84 +17,37 @@ Terraform modules for building a secure, auditable AWS Data Lake platform.
 
 ## Architecture
 
+**Data Pipeline:**
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                                     │
-│   ┌─────────────────────────────────────────────────────────────────────────────────────────────┐   │
-│   │                              ECS Fargate (ecs-service)                                      │   │
-│   │     ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                 │   │
-│   │     │   Schema     │  │   Cruise     │  │  Prometheus  │  │ Alertmanager │                 │   │
-│   │     │  Registry    │  │  Control     │  │              │  │              │                 │   │
-│   │     └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────────────┘                 │   │
-│   │            │ schema          │ manage          │ monitor                                    │   │
-│   └────────────┼─────────────────┼─────────────────┼────────────────────────────────────────────┘   │
-│                │                 │                 │                                                │
-│                ▼                 ▼                 ▼                                                │
-│   ┌─────────────────────────────────────────────────────────────────────────────────────────────┐   │
-│   │                                    MSK Cluster (msk)                                        │   │
-│   │                              SCRAM-SHA-512 Authentication                                   │   │
-│   │                                 NLB + Route53 Endpoint                                      │   │
-│   │         ┌──────────────────────────────────────────────────────────────────┐                │   │
-│   │         │  Topics (kafka-data-plane): cdc.*.mnpi | cdc.*.public            │                │   │
-│   │         └──────────────────────────────────────────────────────────────────┘                │   │
-│   └───────────────────────────────────────┬─────────────────────────────────────────────────────┘   │
-│                          ▲                │                 │                                       │
-│                          │                │                 │                                       │
-│   ┌──────────────────────┴───┐   ┌────────▼───────┐  ┌──────▼────────┐                             │
-│   │   Debezium CDC Source    │   │ S3 Sink MNPI   │  │ S3 Sink Public│                             │
-│   │     (msk-connect)        │   │ (msk-connect)  │  │ (msk-connect) │                             │
-│   └──────────────────────────┘   └────────┬───────┘  └──────┬────────┘                             │
-│                ▲                          │                 │                                       │
-│                │ CDC                      │                 │                                       │
-│   ┌────────────┴─────────┐                ▼                 ▼                                       │
-│   │   PostgreSQL RDS     │   ┌──────────────────────────────────────────────────────────────────┐   │
-│   │     (database)       │   │                    S3 Data Lake (storage)                        │   │
-│   │                      │   │                                                                  │   │
-│   │  - trades (MNPI)     │   │    ┌────────────────────┐      ┌────────────────────┐           │   │
-│   │  - orders (MNPI)     │   │    │    MNPI Zone       │      │   Public Zone      │           │   │
-│   │  - positions (MNPI)  │   │    │  (KMS: kms_mnpi)   │      │ (KMS: kms_public)  │           │   │
-│   │  - market_data       │   │    │                    │      │                    │           │   │
-│   │  - reference_data    │   │    │  raw_mnpi          │      │  raw_public        │           │   │
-│   │                      │   │    │  curated_mnpi      │      │  curated_public    │           │   │
-│   └──────────────────────┘   │    │  analytics_mnpi    │      │  analytics_public  │           │   │
-│                              │    │                    │      │                    │           │   │
-│                              │    └────────────────────┘      └────────────────────┘           │   │
-│                              │                                                                  │   │
-│                              │    ┌──────────────────────────────────────────────┐             │   │
-│                              │    │              Glue Catalog                    │             │   │
-│                              │    │  (6 databases: raw/curated/analytics × 2)    │             │   │
-│                              │    └──────────────────────────────────────────────┘             │   │
-│                              │                                                                  │   │
-│                              │    ┌──────────────────────────────────────────────┐             │   │
-│                              │    │              CloudTrail Audit                │             │   │
-│                              │    │         (S3 data access logging)             │             │   │
-│                              │    └──────────────────────────────────────────────┘             │   │
-│                              └──────────────────────────────────────────────────────────────────┘   │
-│                                                      │                                              │
-│                                                      │ query                                        │
-│                                                      ▼                                              │
-│   ┌──────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│   │                                    Athena (athena)                                           │  │
-│   │                                                                                              │  │
-│   │    ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐                       │  │
-│   │    │ Finance Analysts │   │  Data Analysts   │   │  Data Engineers  │                       │  │
-│   │    │ Workgroup        │   │  Workgroup       │   │  Workgroup       │                       │  │
-│   │    │                  │   │                  │   │                  │                       │  │
-│   │    │ MNPI + Public    │   │ Public only      │   │ All layers       │                       │  │
-│   │    │ Analytics only   │   │ Analytics only   │   │ MNPI + Public    │                       │  │
-│   │    │ MFA required     │   │                  │   │ MFA required     │                       │  │
-│   │    └──────────────────┘   └──────────────────┘   └──────────────────┘                       │  │
-│   └──────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                                     │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                         Schema Registry
+                      (schema management)
+                              │
+                              ▼
+PostgreSQL ──▶ Debezium ──▶ MSK ──▶ S3 Sink ──▶ S3 Data Lake ◀── Athena
+ (database)  (msk-connect)  (msk)  (msk-connect)   (storage)     (athena)
+                                                        │
+                                                        ▼
+                                                  Glue Catalog
+                                                   (storage)
 ```
 
-**Data Flow:**
-1. **PostgreSQL → Debezium**: CDC captures row-level changes
-2. **Debezium → MSK**: Publish events to Kafka topics (MNPI/Public separated)
-3. **MSK → S3 Sink**: Write to S3 raw layer (time-partitioned)
-4. **S3 + Glue**: Glue Catalog stores table metadata for querying
-5. **Athena → S3**: Query data directly from S3 using Glue metadata
+**Platform Services (ECS Fargate - ecs-service):**
+```
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ Schema Registry │  Cruise Control │   Prometheus    │  Alertmanager   │
+│ (schema mgmt)   │ (cluster mgmt)  │  (metrics)      │   (alerting)    │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+```
+
+**Data Isolation:**
+```
+MNPI Zone (sensitive)              Public Zone (non-sensitive)
+├── cdc.*.mnpi (topics)            ├── cdc.*.public (topics)
+├── raw_mnpi (S3)                  ├── raw_public (S3)
+├── curated_mnpi (S3)              ├── curated_public (S3)
+├── analytics_mnpi (S3)            ├── analytics_public (S3)
+└── KMS: kms_mnpi                  └── KMS: kms_public
+```
 
 ## Usage
 
