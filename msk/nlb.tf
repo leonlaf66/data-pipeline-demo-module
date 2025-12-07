@@ -28,13 +28,13 @@ resource "aws_lb_target_group" "msk_tg_scram" {
 }
 
 resource "aws_lb_target_group_attachment" "brokers_scram" {
-  for_each = {
-    for node in data.aws_msk_broker_nodes.nodes.node_info_list :
-    node.node_id => node.client_vpc_ip_address
-  }
-  target_group_arn = aws_lb_target_group.msk_tg_scram.arn
-  target_id        = each.value
+  count = var.number_of_broker_nodes
+
+  target_group_arn = aws_lb_target_group.scram.arn
+  target_id        = data.aws_msk_broker_nodes.nodes.node_info_list[count.index].client_vpc_ip_address
   port             = 9096
+
+  depends_on = [aws_msk_cluster.this]
 }
 
 resource "aws_lb_listener" "msk_scram" {
