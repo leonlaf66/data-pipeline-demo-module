@@ -1,4 +1,4 @@
-# Kraken Demo Modules
+# data-pipeline Demo Modules
 
 Terraform modules for building a secure, auditable AWS Data Lake platform.
 
@@ -53,9 +53,9 @@ MNPI Zone (sensitive)              Public Zone (non-sensitive)
 
 ```hcl
 module "storage" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//storage?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//storage?ref=v1.0.0"
 
-  app_name   = "kraken-demo"
+  app_name   = "data-pipeline-demo"
   env        = "dev"
   # ...
 }

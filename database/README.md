@@ -15,9 +15,9 @@ PostgreSQL RDS instance with CDC-enabled parameters for Debezium integration.
 
 ```hcl
 module "database" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//database?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//database?ref=v1.0.0"
 
-  app_name   = "kraken-demo"
+  app_name   = "data-pipeline-demo"
   env        = "dev"
   region     = "us-east-1"
   account_id = "123456789012"
@@ -63,6 +63,6 @@ The parameter group enables logical replication:
 Credentials are auto-generated and stored in Secrets Manager:
 ```bash
 aws secretsmanager get-secret-value \
-  --secret-id kraken-demo-rds-master-creds-dev \
+  --secret-id data-pipeline-demo-rds-master-creds-dev \
   --query SecretString --output text | jq
 ```

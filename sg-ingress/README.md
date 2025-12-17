@@ -10,7 +10,7 @@ Breaks circular dependencies when multiple modules create security groups that n
 
 ```hcl
 module "sg_ingress" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//sg-ingress?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//sg-ingress?ref=v1.0.0"
 
   ingress_rules = {
     "rds-from-debezium" = {

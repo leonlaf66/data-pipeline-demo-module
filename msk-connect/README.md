@@ -14,7 +14,7 @@ Generic MSK Connect connector with IAM role and security group.
 ### Source Connector (Debezium)
 ```hcl
 module "debezium" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//msk-connect?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//msk-connect?ref=v1.0.0"
 
   connector_name = "debezium-postgres-cdc-dev"
   connector_type = "source"
@@ -43,7 +43,7 @@ module "debezium" {
 ### Sink Connector (S3)
 ```hcl
 module "s3_sink" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//msk-connect?ref=main"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//msk-connect?ref=main"
 
   connector_name = "s3-sink-raw-mnpi-dev"
   connector_type = "sink"

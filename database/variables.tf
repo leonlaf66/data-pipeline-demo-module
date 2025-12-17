@@ -52,7 +52,7 @@ variable "allowed_ingress_security_groups" {
 
 variable "db_name" {
   type        = string
-  default     = "kraken_db"
+  default     = "data-pipeline_db"
   description = "The name of the database to create when the DB instance is created"
 }
 

@@ -16,9 +16,9 @@ Amazon MSK cluster with SCRAM authentication, NLB endpoint, and Route53 DNS.
 
 ```hcl
 module "msk" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//msk?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//msk?ref=v1.0.0"
 
-  app_name   = "kraken-demo"
+  app_name   = "data-pipeline-demo"
   env        = "dev"
   region     = "us-east-1"
   account_id = "123456789012"
@@ -63,6 +63,6 @@ MSK Connect requires `authentication_type = "NONE"` but still uses SCRAM via JAA
 
 ```bash
 aws secretsmanager get-secret-value \
-  --secret-id AmazonMSK_kraken-demo_dev_admin \
+  --secret-id AmazonMSK_data-pipeline-demo_dev_admin \
   --query SecretString --output text | jq
 ```

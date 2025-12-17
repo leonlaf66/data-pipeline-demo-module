@@ -1,6 +1,6 @@
 variable "app_name" {
   type        = string
-  description = "The name of the application or service, used for naming resources (e.g., 'kraken-data-platform')"
+  description = "The name of the application or service, used for naming resources (e.g., 'data-pipeline-data-platform')"
 }
 
 variable "env" {

@@ -20,9 +20,9 @@ Athena query layer with role-based access control for MNPI/Public data separatio
 
 ```hcl
 module "athena" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//athena?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//athena?ref=v1.0.0"
 
-  app_name   = "kraken-demo"
+  app_name   = "data-pipeline-demo"
   env        = "dev"
   region     = "us-east-1"
   account_id = "123456789012"
@@ -71,7 +71,7 @@ module "athena" {
 ```bash
 # Finance Analyst (requires MFA)
 aws sts assume-role \
-  --role-arn arn:aws:iam::123456789012:role/kraken-demo-finance-analysts-dev \
+  --role-arn arn:aws:iam::123456789012:role/data-pipeline-demo-finance-analysts-dev \
   --role-session-name finance-query \
   --serial-number arn:aws:iam::123456789012:mfa/user \
   --token-code 123456

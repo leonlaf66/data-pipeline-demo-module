@@ -11,7 +11,7 @@ Manages Kafka topics and ACLs using the Mongey Kafka provider.
 
 ```hcl
 module "kafka" {
-  source = "git::https://github.com/leonlaf66/kraken-demo-module.git//kafka-data-plane?ref=v1.0.0"
+  source = "git::https://github.com/leonlaf66/data-pipeline-demo-module.git//kafka-data-plane?ref=v1.0.0"
 
   bootstrap_servers    = var.msk_bootstrap_brokers_nlb
   kafka_admin_username = "admin"
